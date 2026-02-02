@@ -15,12 +15,15 @@ jobs:
       - name: Login to GitHub Container Registry (GHCR)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Set image tag
+        run: echo "IMAGE_TAG=ghcr.io/$(echo ${{ github.actor }} | tr '[:upper:]' '[:lower:]')/${{ github.event.repository.name }}:latest" >> $GITHUB_ENV
+
       - name: Build Docker Image
-        run: docker build -t ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}:latest .
+        run: docker build -t $IMAGE_TAG .
 
       - name: Verify Vue Build Output
         run: |
-          CONTAINER_ID=$(docker create ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}:latest)
+          CONTAINER_ID=$(docker create $IMAGE_TAG)
           docker cp $CONTAINER_ID:/usr/share/nginx/html ./dist
           docker rm -v $CONTAINER_ID
           ls -la ./dist
